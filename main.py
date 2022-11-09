@@ -5,9 +5,13 @@ from maze import Maze
 
 
 if __name__ == "__main__":
-
+    # model = SemiGradientSarsa(1,1)
     env = Maze()
-    alg = SemiGradientSarsa(env, 0.01, 0.1)
+    model = SemiGradientSarsa(env, 1, 1)
     env.reset()
-    env.step(1)
+    # print(env.currentState)
+    # next, rew, done, meta = env.step(1)
+    # print(next)
+    model.train(30)
+
 

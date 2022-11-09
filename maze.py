@@ -8,8 +8,8 @@ class Maze(gym.Env):
   def __init__(self):
     # 0 is wall; 1 is floor 
     self.level = np.array([  
-        [0,0,3,0,0,0,0,0,0,0],
-        [0,1,1,1,1,1,1,1,1,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,3,1,1,1,1,1,1,1,0],
         [0,1,0,0,0,0,0,0,1,0],
         [0,1,0,0,0,0,0,0,1,0],
         [0,1,0,0,0,0,0,0,1,0],
@@ -18,6 +18,31 @@ class Maze(gym.Env):
         [0,1,0,0,0,0,0,0,1,0],
         [0,1,1,1,1,2,1,1,1,0],
         [0,0,0,0,0,0,0,0,0,0]])
+
+    self.terminalState = ','.join(map(str, np.array([  
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,2,1,1,1,1,1,1,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,4,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,1,1,1,1,1,1,1,0],
+        [0,0,0,0,0,0,0,0,0,0]]).ravel())) 
+
+    self.dangerState =','.join(map(str, np.array([  
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,3,1,1,1,1,1,1,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,2,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,0,0,0,0,0,0,1,0],
+        [0,1,1,1,1,1,1,1,1,0],
+        [0,0,0,0,0,0,0,0,0,0]]).ravel())) 
+
     self.currentState = self.level
     self.action_space = spaces.Discrete(4)
     self.observation_space = spaces.Box(0, 5, shape=(1,25), dtype='int')
@@ -36,18 +61,26 @@ class Maze(gym.Env):
         return self.currentState
 
   def step(self, action): 
-        ac = self.actionMap[action]
-        print("Step.............",np.argwhere(self.level == 3), ac,)
-        next_state = self.h.getNextStateDynamically(self.currentState, ac)
+        while(self.done == False):
+            ac = self.actionMap[action]
+            print("Step.............",np.argwhere(self.level == 2), ac,self.currentState)
+            next_state = self.h.getNextStateDynamically(self.currentState,ac)
+            print("Cu",self.currentState)
+            print("Ne",next_state)
+            self.h.isFirstIter = False
 
-  def epsilonGreedy(self, currentState):
-        randomProb = np.random.random()
-        stateIndex = self.stateTable.index(currentState)
-        if (randomProb > self.epsilon):
-            print("exploring...")
-            actions = [0,1,2,3]
-            randomChoiceAction = np.random.choice(actions)
-            return randomChoiceAction
-        else:
-            print("exploiting.. Choosing best action from Qtable", np.argmax(self.stateTable[stateIndex]))
-            return np.argmax(self.stateTable[stateIndex]) # check this later
+            stringNextState = ','.join(map(str, next_state.ravel()))  
+            # If agent takes path to the left it falls into the hole i.e #4 and game is over
+            if(stringNextState == self.dangerState):
+                self.reset()
+                return next_state, -5, self.done, {}
+            # If agent hits terminal state
+            if(stringNextState == self.terminalState):
+                self.done = True
+                self.reset()
+                return next_state, 10, self.done, {}
+            # All other steps agent gets -1    
+            else:
+                # print(next_state, -1, self.done)
+                return next_state, -1, self.done, {}
+
