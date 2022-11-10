@@ -22,7 +22,7 @@ class SemiGradientSarsa():
 
     def generateStateVector(self, state, action):
         player_pos = np.argwhere(state)
-   
+
         initial_array = [1,]
         initial_array.append(state[0][0])
         initial_array.append(state[0][1])
@@ -36,12 +36,12 @@ class SemiGradientSarsa():
 
     def updateWeightSemiGradientSarsa(self, weights, vHat, vHatPrime, reward, alpha, gamma, isTerminal, feat_vector_s):
 
-        weights_2 = np.copy(weights)
         if (isTerminal):
-            w = weights_2 + (alpha * (reward- vHat) * feat_vector_s)
+            w = weights + (alpha * (reward- vHat) * feat_vector_s)
+            weights + (0.1 * (-1 + 0.9*(vHatPrime) - vHat)) * feat_vector_s
             return w
         else:
-            w = weights_2 + (alpha * (reward + gamma*(vHatPrime) - vHat)) * feat_vector_s
+            w = weights + (alpha * (reward + gamma*(vHatPrime) - vHat)) * feat_vector_s
             print("New weight is", w)
             return w 
 
@@ -99,9 +99,10 @@ class SemiGradientSarsa():
                 initialState = next_state
                 self.env.currentState =  next_state
                 if(self.isTerminalState(next_state)):
-                    self.done == True
+                    self.done = True
+                    print(self.done)
                     print("====================== Terminal State ========================")
-                    break
+                    # break
 
 
 

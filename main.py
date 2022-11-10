@@ -12,6 +12,6 @@ if __name__ == "__main__":
     # print(env.currentState)
     # next, rew, done, meta = env.step(1)
     # print(next)
-    model.train(30)
+    model.train(10)
 
 
