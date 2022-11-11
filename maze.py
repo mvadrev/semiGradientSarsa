@@ -6,42 +6,42 @@ from dynamicTransition import dynTransition
 
 class Maze(gym.Env):
   def __init__(self):
-    # 0 is wall; 1 is floor 
+    # 0 is wall; 1 is floor  #3 is goal state #4 is danger state #2 player
     self.level = np.array([  
         [0,0,0,0,0,0,0,0,0,0],
         [0,3,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,1,1,1,1,1,1,1,1,0],
-        [0,4,1,1,1,1,1,1,1,0],
+        [0,1,1,0,0,0,1,1,1,0],
+        [0,4,1,1,1,0,0,0,0,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,2,1,1,1,0],
         [0,0,0,0,0,0,0,0,0,0]])
 
-    self.terminalState = ','.join(map(str, np.array([  
+    self.terminalState = np.array([  
         [0,0,0,0,0,0,0,0,0,0],
         [0,2,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
+        [0,1,1,0,0,0,1,1,1,0],
+        [0,4,1,1,1,0,0,0,0,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,4,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,1,1,1,1,1,1,1,1,0],
-        [0,0,0,0,0,0,0,0,0,0]]).ravel())) 
+        [0,0,0,0,0,0,0,0,0,0]])
 
-    self.dangerState =','.join(map(str, np.array([  
+    self.dangerState = np.array([  
         [0,0,0,0,0,0,0,0,0,0],
         [0,3,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
+        [0,1,1,0,0,0,1,1,1,0],
+        [0,2,1,1,1,0,0,0,0,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,2,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,1,1,1,1,1,1,1,1,0],
-        [0,0,0,0,0,0,0,0,0,0]]).ravel())) 
+        [0,0,0,0,0,0,0,0,0,0]])
 
     self.currentState = self.level
     self.action_space = spaces.Discrete(4)
@@ -61,30 +61,21 @@ class Maze(gym.Env):
         return self.currentState
 
   def step(self, action): 
+
         while(self.done == False):
             ac = self.actionMap[action]
-            print("Step.............",np.argwhere(self.level == 2), ac,self.currentState)
+
+            # Get bext state
             next_state = self.h.getNextStateDynamically(self.currentState,ac)
 
-            
-
-            print("Cu",self.currentState)
-            print("Ne",next_state)
+            # DO if done is false
             self.h.isFirstIter = False
-
-            
-            
-            stringNextState = ','.join(map(str, next_state.ravel()))  
-
-            # if(next_state == self.currentState).all():
-            #     return next_state, -10, self.done, {}
-
             # If agent takes path to the left it falls into the hole i.e #4 and game is over
-            if(stringNextState == self.dangerState):
+            if(next_state == self.dangerState).all():
                 self.reset()
-                return next_state, -5, self.done, {}
+                return next_state, -50, self.done, {}
             # If agent hits terminal state
-            if(stringNextState == self.terminalState):
+            if(next_state == self.terminalState).all():
                 self.done = True
                 self.reset()
                 return next_state, 10, self.done, {}

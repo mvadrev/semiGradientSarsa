@@ -17,8 +17,8 @@ class SemiGradientSarsa():
         [0,2,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
-        [0,1,1,1,1,1,1,1,1,0],
-        [0,4,1,1,1,1,1,1,1,0],
+        [0,1,1,0,0,0,1,1,1,0],
+        [0,4,1,1,1,0,0,0,0,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
         [0,1,1,1,1,1,1,1,1,0],
@@ -66,14 +66,12 @@ class SemiGradientSarsa():
 
 
     def updateWeightSemiGradientSarsa(self, weights, vHat, vHatPrime, reward, alpha, gamma, isTerminal, feat_vector_s):
-
         if (isTerminal):
             w = weights + (alpha * (reward- vHat) * feat_vector_s)
             weights + (0.1 * (-1 + 0.9*(vHatPrime) - vHat)) * feat_vector_s
             return w
         else:
             w = weights + (alpha * (reward + gamma*(vHatPrime) - vHat)) * feat_vector_s
-            print("New weight is", w)
             return w 
 
     def isTerminalState(self, currentState):
@@ -100,14 +98,14 @@ class SemiGradientSarsa():
             return np.argmax(vals)
 
     # this function calculates max action using qhat in s using a and w to get best acition for the given state
-    def getBestPolicyAndValue(self, isTerminal):
-        if(isTerminal):
+    def getBestPolicyAndValue(self):
             for i in range(self.env.level.shape[0]):
                             for j in range(self.env.level.shape[1]):
                                 acs = [0,1,2,3]
                                 acs_vals = []
                                 if(self.env.level[i][j] == 0):
                                     self.values[i][j] = -20
+                                    pass
                                 else:
                                     for action in range(len(acs)):
                                         x = self.generateStateVector([[i,j]], action)
@@ -115,15 +113,9 @@ class SemiGradientSarsa():
                                         acs_vals.append(qhat)
                                         index = np.argmax(acs_vals)
                                         self.values[i][j] = round(acs_vals[index],2)
-                            
-            for i in range(self.policy.shape[0]):
-                            for j in range(self.policy.shape[1]):
-                                if(i + 1 < 10 & j+ 1  < 10):
-                                    offsets =  np.array([self.values[i][j - 1], self.values[i][j +1], self.values[i -1][j], self.values[i +1][j]])
-                                    max_offset = np.argmax(offsets)
-                                    self.policy[i][j] = max_offset
-        print(self.values)
-        print(self.policy)
+                                        self.policy[i][j] = index
+            print(self.values)
+            print(self.policy)
                                
             
 
@@ -137,26 +129,17 @@ class SemiGradientSarsa():
              while (self.done == False):
                 step = step + 1 
                 action = self.epsilonGreedy(initialState, self.weights)
-                print("Action is ", action)
-                # print("States before", initialState)
                 next_state, reward, done, meta = self.env.step(action)
-                print("Reward is..", reward)
-                # print("States next", next_state)
                 position_player_s = np.argwhere(initialState == 2)
-                print("S player", position_player_s)
 
                 position_player_sPrime = np.argwhere(next_state == 2)
-                print("Sprime player", position_player_sPrime)
 
                 feat_vector_s =  self.generateStateVector(position_player_s, action)
                 feat_vector_sPrime =  self.generateStateVector(position_player_sPrime, action)
 
-                print("Feature vactors", feat_vector_s, feat_vector_sPrime)
-                print("Weights", self.weights)
 
                 vHat = np.dot(self.weights , feat_vector_s)
                 vHatPrime = np.dot(self.weights , feat_vector_sPrime)
-                print("vhat is", vHat)
 
                 updatedWeight = self.updateWeightSemiGradientSarsa(self.weights,vHat, vHatPrime, reward, self.alpha, self.epsilon, self.isTerminalState(next), feat_vector_s)
                 self.weights = updatedWeight
@@ -166,8 +149,9 @@ class SemiGradientSarsa():
 
                 if(step % 10 == 0):
                     print("*********************** showing policy and value  ************************")
+                    self.getBestPolicyAndValue()
 
-
+                
                 # Change next state to become current state 
                 self.env.currentState =  next_state
                 initialState = next_state
@@ -179,7 +163,7 @@ class SemiGradientSarsa():
                     print("====================== Terminal State ========================")
                     print("Running policy evolution visulaization for terminal state...")
 
-                    self.getBestPolicyAndValue(True)
+                    self.getBestPolicyAndValue()
 
 
 
